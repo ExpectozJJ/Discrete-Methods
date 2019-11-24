@@ -24,7 +24,7 @@ def Prufer_Code(T):
                     T.remove_node(l)
                     break
                 break
-            print(code)
+            #print(code)
     else:
         raise ValueError("Input is not a Tree!")
     
