@@ -15,9 +15,6 @@ def id(n):
     return d
 
 def bfs(G, u, v):
-    # Performs the Breadth First Search of the Edmonds-Karp Algorithm to find a shortest augmenting path
-    # Edmonds-Karp Algorithm terminates finitely when the shortest augmenting path is used every iteration 
-
     for n in G.nodes():
         if n == u:
             G.nodes[n]['bfs'] = 0
@@ -26,7 +23,7 @@ def bfs(G, u, v):
     
     Q = [u]
     while Q != []:
-        print("Queue: ", Q)
+        #print("Queue: ", Q)
         q = Q.pop(0)
         for n in np.sort(np.array(list(nx.neighbors(G, q)))):
             if id(n) > id(q):
@@ -37,21 +34,62 @@ def bfs(G, u, v):
         #print("Queue: ", Q)
         if len(Q) > 0:
             u = Q[0]
-
+    
+    predecessors = nx.get_node_attributes(G, 'predecessor')
+    for node, pre in predecessors.items():
+        print("G[{}]: {}".format(node,pre), end=" ")
+    print("\n")
     return G
 
-def edmonds_karp(G, u, v):
-    # Finds a Maximum Flow of given network G from source vertex u to target vertex v
+def ford_fulkerson(G, u, v):
+    # Finds a Maximum Flow of a given network from u to v but with any augmenting path 
 
     for e in G.edges():
         G.edges[e]['flow'] = 0
 
     flow = 1
     while flow != 0:
+        for path in nx.all_simple_paths(G, u, v):
+            feasible = 1
+            for i in range(len(path)-1):
+                if G.edges[(path[i],path[i+1])]['capacity'] - G.edges[(path[i],path[i+1])]['flow'] <= 0:
+                    feasible = 0
+            if feasible == 1:
+                p = path
+                break
+
+            delta = []
+            for i in range(len(path)-1):
+                delta.append(G.edges[(path[i],path[i+1])]['capacity']-G.edges[(path[i],path[i+1])]['flow'])
+            flow = min(delta)
+            if flow == 0:
+                break
+            for i in range(len(path)-1):
+                G.edges[(path[i],path[i+1])]['flow'] += flow
+            print("Augmenting Path: ", end=" ")
+            for i in range(len(path)-1):
+                print(path[i]+" ->", end =" ")
+            print(path[-1])
+            print("Flow Value: ", flow)
+    
+    maxflow = 0
+    for n in nx.neighbors(G, u):
+        maxflow += G.edges[(u,n)]['flow']
+    return maxflow
+
+
+def edmonds_karp(G, u, v):
+    for e in G.edges():
+        G.edges[e]['flow'] = 0
+
+    flow = 1
+    niters = 1
+    while flow != 0:
+        print("Iteration: {}".format(niters))
         G = bfs(G, u, v)
 
-        path = [v]
-        while path[-1] != u:
+        path = ['t']
+        while path[-1] != 's':
             path.append(G.nodes[path[-1]]['predecessor'])
         path = path[::-1]
 
@@ -68,10 +106,11 @@ def edmonds_karp(G, u, v):
             print(path[i]+" ->", end =" ")
         print(path[-1])
         print("Flow Value: ", flow)
+        print("\n")
     
     maxflow = 0
-    for n in nx.neighbors(G, u):
-        maxflow += G.edges[(u,n)]['flow']
+    for n in nx.neighbors(G, 's'):
+        maxflow += G.edges[('s',n)]['flow']
     return maxflow
 
 G = nx.DiGraph()
@@ -132,3 +171,4 @@ plt.axis('off')
 plt.show()
 
 edmonds_karp(G, '0', '9')
+ford_fulkerson(G,'0','9')
