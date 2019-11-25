@@ -107,6 +107,7 @@ def edmonds_karp(G, u, v):
         print(path[-1])
         print("Flow Value: ", flow)
         print("\n")
+        niters += 1
     
     maxflow = 0
     for n in nx.neighbors(G, 's'):
